@@ -22,7 +22,9 @@ cargo.store = storeViews;
 function storeViews(urls) {
   for (var i = 0; i < urls.length; i++) {
     var url = urls[i];
-    fetchView(url);
+    storage.get(url, function(value) {
+      if (value) fetchView(url);
+    });
   }
 }
 
@@ -40,7 +42,7 @@ function fetchView(url) {
 function renderView(url) {
   storage.get(url, decompressAndRenderView);
   function decompressAndRenderView(compressedHTML) {
-    var html = LZString.decompressed(compressedHTML);
+    var html = LZString.decompress(compressedHTML);
     var doc = document.open();
     doc.write(html);
     doc.close();
@@ -53,7 +55,7 @@ function attachClickHandlers(urls) {
   for (var i = 0; i < urls.length; i++) {
     url = urls[i];
     // a[href=link] matches link exactly
-    $('a[href=' + url + ']').click(clickAndRender);
+    $("a[href='" + url + "']").click(clickAndRender);
   }
 }
 
