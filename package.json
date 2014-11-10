@@ -1,0 +1,23 @@
+{
+  "name": "cargo.js",
+  "version": "0.0.0",
+  "description": "Let localStorage handle your files",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mavenave/cargo.js.git"
+  },
+  "keywords": [
+    "localStorage",
+    "requests"
+  ],
+  "author": "mavenave",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mavenave/cargo.js/issues"
+  },
+  "homepage": "https://github.com/mavenave/cargo.js",
+  "devDependencies": {
+    "gulp": "^3.8.10"
+  }
+}
