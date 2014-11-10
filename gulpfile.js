@@ -12,15 +12,24 @@ gulp.task('server', function() {
   }
   runServer();
 
-  // restart server on file changes
-  gulp.watch('./test/views/*.jade', runServer);
+  // server.notify reloads at browser
+  // server.run restarts server
+  gulp.watch('./test/views/*.jade', server.notify);
   gulp.watch('./test/routes/*.js', runServer);
+  gulp.watch('./test/public/javascripts/*.js', runServer);
   gulp.watch('./test/app.js', runServer);
 
   // transfers script to test site
-  var scriptWatcher = gulp.watch('./lib/*.js');
+  var scriptWatcher = gulp.watch('./test/public/javascripts/*.js');
   scriptWatcher.on('change', function(event) {
     gulp.src(event.path)
-      .pipe(gulp.dest('./test/public/javascripts'));
+      .pipe(gulp.dest('./lib'));
+  });
+
+  // storage.js is in a separate repo
+  var storagejsWatcher = gulp.watch('./lib/storage.js');
+  storagejsWatcher.on('change', function(event) {
+    gulp.src(event.path)
+      .pipe(gulp.dest('../storage.js'));
   });
 });
