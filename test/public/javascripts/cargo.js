@@ -17,7 +17,7 @@ cargo.store = storeViews;
   } else if (!storage.works) {
     throw new Error('Browser does not support Web Storage');
   }
-})();a
+})();
 
 function storeViews(urls) {
   for (var i = 0; i < urls.length; i++) {

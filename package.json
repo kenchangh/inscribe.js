@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/mavenave/cargo.js",
   "devDependencies": {
-    "gulp": "^3.8.10"
+    "connect-livereload": "^0.5.0",
+    "debug": "^2.1.0",
+    "gulp": "^3.8.10",
+    "gulp-express": "^0.1.0"
   }
 }
