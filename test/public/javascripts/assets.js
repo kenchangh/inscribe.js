@@ -35,23 +35,46 @@ function convertAllImgToBase64(html) {
   return html;
 }
 
-function internalizeScripts(html) {
+// Implementation
+function internalizeTextFiles(type, html, callback) {
+  var tagNames = {
+    js: 'script',
+    css: 'style'
+  };
+  var tagName = tagNames[type];
   var $html = $(html);
-  var $scripts = $html.filter('script');
-  $scripts.each(function() {
-    var $script = $(this);
-    var scriptSource = $script.attr('src');
-    fetchScript(scriptSource);
+  var $assets = $html.filter(tagName);
+  var fetchedCounter = 0;
+  $assets.each(function() {
+    var $asset = $(this);
+    var assetSource = $asset.attr('src');
+    fetchAsset(assetSource);
   });
-  function fetchScript(url) {
+  function fetchAsset(url) {
     $.ajax({
       url: url,
-      success: replaceScript
+      success: injectAsset
+    }).done(function() {
+      fetchedCounter++;
+      if (fetchedCounter === $assets.length) callback(html);
     });
+    function injectAsset(assetContent) {
+      var assetPattern = '<\\s*' + tagName + '\\s*src\\s*=\\s*"'
+                       + url  + '"\\s*\\/?>';
+      html = html.replace(
+        new RegExp(assetPattern, 'gim'),
+        '<script>' + assetContent + '</script>'
+      );
+    }
   }
-  function replaceScript(js) {
-    var internalScript = '<script>' + js + '</script';
-    html.replace(/<script src="(.*)>"/gim, internalScript);
-  }
+}
+
+// Syntactic sugar
+function internalizeJS(html, callback) {
+  internalizeTextFiles('js', html, callback);
+}
+
+function internalizeCSS(html, callback) {
+  internalizeTextFiles('css', html, callback);
 }
 

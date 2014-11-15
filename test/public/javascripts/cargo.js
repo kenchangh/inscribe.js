@@ -32,9 +32,19 @@ function storeViews(urls) {
 function fetchView(url) {
   $.ajax({
     url: url,
-    success: compressAndStoreView
+    success: processHTML
   });
+  function processHTML(html) {
+    internalizeImages(html, function(html1) {
+      internalizeJS(html1, function(html2) {
+        internalizeCSS(html2, function(html3) {
+          compressAndStoreView(html3);
+        });
+      });
+    });
+  }
   function compressAndStoreView(html) {
+    console.log(html);
     var compressedHTML = LZString.compress(html);
     storage.set(url, compressedHTML);
   }
@@ -46,7 +56,6 @@ function attachClickHandlers(urls) {
     url = urls[i];
     // a[href="url"] matches link exactly
     $("a[href='" + url + "']").click(clickAndRender);
-
   }
 };
 
@@ -67,12 +76,97 @@ function renderView(url) {
   }
 }
 
+
 // renders page on back button
 $(window).on('popstate', function(e) {
   if (e.originalEvent.state !== null) {
     renderView(location.pathname);
   }
 });
+
+/**
+ * All HTML processing functions here.
+ */
+
+function convertImgToBase64(url, callback, outputFormat){
+  var canvas = document.createElement('CANVAS');
+  var ctx = canvas.getContext('2d');
+  var img = new Image();
+  img.crossOrigin = 'Anonymous';
+  img.onload = function(){
+    canvas.height = img.height;
+    canvas.width = img.width;
+    ctx.drawImage(img, 0, 0);
+    var dataURL = canvas.toDataURL(outputFormat);
+    callback(dataURL);
+    canvas = null;
+  };
+  img.src = url;
+}
+
+function internalizeImages(html, callback) {
+  console.log('passed imaeg')
+  var $html = $(html);
+  var $images = $html.filter('img');
+  $images.each(function(index) {
+    var $image = $(this);
+    var imageSource = $image.attr('src');
+    convertImgToBase64(imageSource, function(dataURL) {
+      html = html.replace(/<img src="(.*)">/gim,
+        '<img src="' + dataURL + '">');
+      if (index === $images.length-1) callback(html);
+    });
+  });
+}
+
+function internalizeTextFiles(type, html, callback) {
+  var tagNames = {
+    js: 'script',
+    css: 'link[rel="stylesheet"]'
+  };
+  var tagName = tagNames[type];
+  var $html = $(html);
+  var $assets = $html.filter(tagName);
+  var fetchedCounter = 0;
+  $assets.each(function() {
+    var $asset = $(this);
+    var assetSource = $asset.attr('src');
+    fetchAsset(assetSource);
+  });
+  function fetchAsset(url) {
+    var tagPatterns = {
+      js: '<\\s*script\\s*src\\s*=\\s*"' + url + '"\\s*\\/?>',
+      css: '<\\s*link.*href\\s*=\\s*' + url + '.*/?>'
+    };
+    $.ajax({
+      url: url,
+      success: function(html) {
+        var tagPattern = new RegExp(tagPatterns[type], 'gim');
+        injectAsset(html, tagPattern)
+      }
+    }).done(function() {
+      fetchedCounter++;
+      if (fetchedCounter === $assets.length) {
+        callback(html);
+      }
+    });
+  }
+  function injectAsset(assetContent, tagPattern) {
+    html = html.replace(
+      tagPattern,
+      '<' + tagName + '>' + assetContent + '</' + tagName + '>'
+    );
+  }
+}
+
+// Syntactic sugar
+function internalizeJS(html, callback) {
+  internalizeTextFiles('js', html, callback);
+}
+
+function internalizeCSS(html, callback) {
+  internalizeTextFiles('css', html, callback);
+}
 
 window.cargo = cargo;
 
