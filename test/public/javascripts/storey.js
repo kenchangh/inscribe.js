@@ -20,6 +20,7 @@ var defaultStorage = storageTypes[storage.storageType];
 var setItem = defaultStorage.setItem.bind(defaultStorage);
 var getItem = defaultStorage.getItem.bind(defaultStorage);
 var removeItem = defaultStorage.removeItem.bind(defaultStorage);
+var clearStorage = defaultStorage.clear.bind(defaultStorage);
 
 /*
  * Check browser support for storage
@@ -58,27 +59,17 @@ function async(func) {
     var callback = args.pop();
     asyncFunc.status = PENDING;
     // Pushes it to background with 0ms delay
-    var funcToBackground = setTimeout(function() {
+    setTimeout(function() {
       try {
         var result = func.apply(this, args);
+        callback(result);
         asyncFunc.status = SUCCESS;
         asyncFunc.result = result;
       } catch(e) {
         asyncFunc.status = FAIL;
-        asyncFunc.result = e;
+        callback(e);
       }
     }, 0);
-    // Runs continuously checking for status of asyncFunc
-    // Runs after-task attached at asyncFunc.done
-    var asyncFuncChecker = setInterval(function() {
-      var status = asyncFunc.status;
-      if (status === SUCCESS || status === FAIL) {
-        clearInterval(asyncFuncChecker);
-        callback(asyncFunc.result);
-      }
-    }, 0);
-    // Attached to returned asyncFunc.done
-    return asyncFunc;
   };
   return asyncFunc;
 }
@@ -102,6 +93,11 @@ function async(func) {
  */
 function parseIfPossible(obj) {
   try {
+    /*
+    // 'string' will become "'string'"
+    obj = typeof obj === 'string'
+      ? obj
+      : JSON.parse(obj);*/
     return JSON.parse(obj);
   } catch(e) {
     return obj;
@@ -117,7 +113,10 @@ function parseIfPossible(obj) {
  */
 function stringifyIfPossible(obj) {
   try {
-    return JSON.stringify(obj);
+    obj = typeof obj === 'string'
+      ? obj
+      : JSON.stringify(obj);
+    return obj;
   } catch(e) {
     return obj;
   }
@@ -140,10 +139,13 @@ function stringifyIfPossible(obj) {
  * @param {Function} callback
  * @api public
  */
+// FIXME
+// Apparently this runs really slow, at 88ms
+// NOW at 120ms....
 storage.set = function setStorage(key, value, callback) {
   value = stringifyIfPossible(value);
   async(setItem).run(key, value, function(){
-    if (callback) callback();
+    if (typeof callback === 'function') callback();
   });
 };
 
@@ -170,18 +172,16 @@ storage.setSync = function(key, value) {
 storage.setMulti = function(keyValue, callback) {
   var keys = Object.keys(keyValue);
   var counter = 0;
-  function incrementCounter() { counter++; }
+  function incrementCounter() {
+    counter++;
+    if (counter === keys.length &&
+      typeof callback === 'function') callback();
+  }
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     var value = keyValue[key];
     storage.set(key, value, incrementCounter);
   }
-  var counterChecker = setInterval(function() {
-    if (counter === keys.length) {
-      clearInterval(counterChecker);
-      if (callback) callback();
-    }
-  }, 0);
 };
 
 /*
@@ -200,6 +200,9 @@ storage.get = function getStorage(key, callback) {
     callback(parseIfPossible(value));
   });
 };
+
+// For syntactic sugar
+storage.has = storage.get;
 
 /*
  * Wrapper function for localStorage.setItem
@@ -226,18 +229,12 @@ storage.getMulti = function getMultiStorage(keys, callback) {
   var values = [];
   function rememberValue(value) {
     values.push(parseIfPossible(value));
+    if (values.length === keys.length) callback(values);
   }
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     storage.get(key, rememberValue);
   }
-  // Continuously check for function completion
-  var counterChecker = setInterval(function() {
-    if (values.length === keys.length) {
-      clearInterval(counterChecker);
-      callback(values);
-    }
-  }, 0);
 };
 
 /*
@@ -251,7 +248,7 @@ storage.getMulti = function getMultiStorage(keys, callback) {
  */
 storage.remove = function removeStorage(key, callback) {
   async(removeItem).run(key, function() {
-    callback();
+    if (typeof callback === 'function') callback();
   });
 };
 
@@ -276,16 +273,20 @@ storage.removeSync = function removeSyncStorage(key) {
  */
 storage.removeMulti = function removeMultiStorage(keys, callback) {
   var counter = 0;
-  function incrementCounter() { counter++; }
+  function incrementCounter() {
+    counter++;
+    if (counter === keys.length &&
+      typeof callback === 'function') callback();
+  }
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     storage.remove(key, incrementCounter);
   }
-  var counterChecker = setInterval(function() {
-    if (counter === keys.length) {
-      clearInterval(counterChecker);
-      callback();
-    }
+};
+
+storage.clear = function asyncClearStorage(callback) {
+  async(clearStorage).run(function() {
+    if (typeof callback === 'function') callback();
   });
 };
 
@@ -325,19 +326,29 @@ var MAX_SIZE = 1024 * 1024 * 5;  // 5 MB is default size of storage
 
 /*
  * Iterates through keys and values, records their lengths.
- *
+ * An asynchronous function.
+ * 
+ * @param {Function} callback
+ *   @param {Number} storageSize
  * @api public
  */
-storage.size = function getStorageSize() {
+storage.size = function getStorageSize(callback) {
   var keys = Object.keys(defaultStorage);
   var keysLength = keys.join('').length;
   var value, values = [];
   for (var i = 0; i < keys.length; i++) {
-    value = defaultStorage.getItem(keys[i]);
-    values.push(value);
+    // localize 'i' into the function
+    (function(i) {
+      async(getItem).run(keys[i], function(value) {
+        values.push(value);
+        if (values.length === keys.length &&
+          typeof callback === 'function') {
+          var valuesLength = values.join('').length;
+          callback(keysLength + valuesLength);
+        }
+      });
+    })(i);
   }
-  var valuesLength = values.join('').length;
-  return keysLength + valuesLength;
 };
 
 /*
@@ -346,10 +357,12 @@ storage.size = function getStorageSize() {
  *
  * @api public
  */
-storage.left = function getStorageLeft() {
-  return MAX_SIZE - this.size();
+storage.left = function getStorageLeft(callback) {
+  storage.size(function(storageSize) {
+    callback(MAX_SIZE - storageSize);
+  });
 };
 
-window.storage = storage;
+window.storey = storage;
 
 })();  // storage.js encapsulation

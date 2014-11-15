@@ -8,24 +8,25 @@ var LZString={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234
 
 var cargo = {};
 cargo.store = storeViews;
+var storage = storey;
 
 (function checkRequirements() {
-  if (!window.jQuery) {
-    throw new Error('jQuery not present');
-  } else if (!LZString) {
-    throw new Error('LZString not loaded');
-  } else if (!storage.works) {
-    throw new Error('Browser does not support Web Storage');
-  }
+  if (!window.jQuery) throw new Error('jQuery not present')
+  if (!LZString) throw new Error('LZString not loaded')
+  if (!storage.works) throw new Error('Web Storage not supported');
 })();
 
 function storeViews(urls) {
   for (var i = 0; i < urls.length; i++) {
     var url = urls[i];
-    storage.get(url, function(value) {
-      if (value) fetchView(url);
-    });
+    // to localize 'url' in async function
+    (function(url) {
+      storage.get(url, function(value) {
+        if (!value) fetchView(url);
+      });
+    })(url);
   }
+  attachClickHandlers(urls);
 }
 
 function fetchView(url) {
@@ -39,6 +40,23 @@ function fetchView(url) {
   }
 }
 
+function attachClickHandlers(urls) {
+  var url;
+  for (var i = 0; i < urls.length; i++) {
+    url = urls[i];
+    // a[href="url"] matches link exactly
+    $("a[href='" + url + "']").click(clickAndRender);
+
+  }
+};
+
+function clickAndRender(e) {
+  e.preventDefault();
+  var url = this.pathname;
+  renderView(url);
+  history.pushState({}, '', url);
+}
+
 function renderView(url) {
   storage.get(url, decompressAndRenderView);
   function decompressAndRenderView(compressedHTML) {
@@ -46,24 +64,15 @@ function renderView(url) {
     var doc = document.open();
     doc.write(html);
     doc.close();
-    //history.pushState(null, null, url);
   }
 }
 
-function attachClickHandlers(urls) {
-  var url;
-  for (var i = 0; i < urls.length; i++) {
-    url = urls[i];
-    // a[href=link] matches link exactly
-    $("a[href='" + url + "']").click(clickAndRender);
+// renders page on back button
+$(window).on('popstate', function(e) {
+  if (e.originalEvent.state !== null) {
+    renderView(location.pathname);
   }
-}
-
-function clickAndRender(e) {
-  e.preventDefault();
-  var url = this.pathname;
-  renderView(url);
-}
+});
 
 window.cargo = cargo;
 

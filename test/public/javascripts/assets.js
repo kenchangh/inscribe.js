@@ -29,25 +29,29 @@ function convertAllImgToBase64(html) {
     var $image = $(this);
     var imageSource = $image.attr('src');
     convertImgToBase64(imageSource, function(dataURL) {
-      $image.attr('src', dataURL);
+      html.replace(/<img src="(.*)">/gim, '<img src="' + dataURL + '">');
     });
   });
-  console.log($html.clone());
-  var newHtml = $('<div>').append($html.clone()).html();
-  return newHtml;
+  return html;
 }
 
 function internalizeScripts(html) {
   var $html = $(html);
-  var scripts = $html.filter('scripts');
-  scripts.each(function() {
-
+  var $scripts = $html.filter('script');
+  $scripts.each(function() {
+    var $script = $(this);
+    var scriptSource = $script.attr('src');
+    fetchScript(scriptSource);
   });
   function fetchScript(url) {
     $.ajax({
       url: url,
-      success: 
-    })
+      success: replaceScript
+    });
+  }
+  function replaceScript(js) {
+    var internalScript = '<script>' + js + '</script';
+    html.replace(/<script src="(.*)>"/gim, internalScript);
   }
 }
 
