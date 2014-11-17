@@ -120,32 +120,39 @@ function internalizeImages(html, callback) {
 }
 
 function internalizeTextFiles(type, html, callback) {
-  var tagNames = {
-    js: 'script',
-    css: 'link[rel="stylesheet"]'
-  };
-  var urlNames = {
-    js: 'src',
-    css: 'href'
+  var typeDatas = {
+    js: {
+      tagName: 'script',
+      newTagName: 'script',
+      urlName: 'src',
+      tagPattern: '<\\s*script\\s*src\\s*=\\s*"' + url + '"\\s*\\/?>'
+    },
+    css: {
+      tagName: 'link[rel="stylesheet"]',
+      newTagName: 'style',
+      urlName: 'href',
+      tagPattern: '<\\s*link.*href\\s*=\\s*"' + url + '".*/?>'
+    }
   }
-  var tagName = tagNames[type];
+  var typeData = typeDatas[type];
+  var tagName = typeData.tagName;
+  var newTagName = typeData.newTagName;
+  var urlName = typeData.urlName;
+  var tagPattern = typeData.tagPattern;
+
   var $html = $(html);
   var $assets = $html.filter(tagName);
   var fetchedCounter = 0;
   $assets.each(function() {
     var $asset = $(this);
-    var assetSource = $asset.attr(urlNames[type]);
+    var assetSource = $asset.attr(urlName);
     fetchAsset(assetSource);
   });
   function fetchAsset(url) {
-    var tagPatterns = {
-      js: '<\\s*script\\s*src\\s*=\\s*"' + url + '"\\s*\\/?>',
-      css: '<\\s*link.*href\\s*=\\s*"' + url + '".*/?>'
-    };
     $.ajax({
       url: url,
       success: function(html) {
-        var tagPattern = new RegExp(tagPatterns[type], 'gim');
+        tagPattern = new RegExp(tagPattern, 'gim');
         injectAsset(html, tagPattern)
       }
     }).done(function() {
@@ -156,7 +163,7 @@ function internalizeTextFiles(type, html, callback) {
   function injectAsset(assetContent, tagPattern) {
     html = html.replace(
       tagPattern,
-      '<' + tagName + '>' + assetContent + '</' + tagName + '>'
+      '<' + newTagName + '>' + assetContent + '</' + newTagName + '>'
     );
   }
 }
