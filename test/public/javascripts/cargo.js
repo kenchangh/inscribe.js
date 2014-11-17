@@ -124,19 +124,23 @@ function internalizeTextFiles(type, html, callback) {
     js: 'script',
     css: 'link[rel="stylesheet"]'
   };
+  var urlNames = {
+    js: 'src',
+    css: 'href'
+  }
   var tagName = tagNames[type];
   var $html = $(html);
   var $assets = $html.filter(tagName);
   var fetchedCounter = 0;
   $assets.each(function() {
     var $asset = $(this);
-    var assetSource = $asset.attr('src');
+    var assetSource = $asset.attr(urlNames[type]);
     fetchAsset(assetSource);
   });
   function fetchAsset(url) {
     var tagPatterns = {
       js: '<\\s*script\\s*src\\s*=\\s*"' + url + '"\\s*\\/?>',
-      css: '<\\s*link.*href\\s*=\\s*' + url + '.*/?>'
+      css: '<\\s*link.*href\\s*=\\s*"' + url + '".*/?>'
     };
     $.ajax({
       url: url,
@@ -146,9 +150,7 @@ function internalizeTextFiles(type, html, callback) {
       }
     }).done(function() {
       fetchedCounter++;
-      if (fetchedCounter === $assets.length) {
-        callback(html);
-      }
+      if (fetchedCounter === $assets.length) callback(html);
     });
   }
   function injectAsset(assetContent, tagPattern) {
