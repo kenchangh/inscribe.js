@@ -70,5 +70,3 @@ inscribe.render('/');
 ```
 Render a page from storage based on `url`.
 
-####[Check it out at GitHub](https://github.com/mavenave/inscribe.js)
-
