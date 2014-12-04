@@ -3,7 +3,7 @@ inscribe.js
 
 **Just do this:**
 
-```language-javascript
+```javascript
 inscribe.store(['/', '/user']);
 ```
 
@@ -27,7 +27,7 @@ As for all the external assets, such as images, stylesheets and scripts, they ar
 
 This:
 
-```language-markup
+```html
 <link rel="stylesheet" type="text/css" href="/asset/css/style.css">
 <img src="/asset/img/image.jpg"></img>
 <script src="/asset/js/script.js></script>
@@ -35,7 +35,7 @@ This:
 
 Will be converted to this:
 
-```language-markup
+```html
 <style>
 .nav {
   background-color: red;
@@ -54,18 +54,18 @@ Tada! All links that are passed into Inscribe will render at magical speeds when
 
 ####A glance at the API
 
-```language-javascript
+```javascript
 inscribe.this();
 ```
 Stores current page user is at into client storage and listen for link clicks.
 
-```language-javascript
+```javascript
 inscribe.store(['/', '/user']);
 ```
 Passed an `Array` of `urls`. These urls are then used to fetch the HTML into the client side storage.
 
 
-```language-javascript
+```javascript
 inscribe.render('/');
 ```
 Render a page from storage based on `url`.
