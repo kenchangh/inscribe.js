@@ -70,3 +70,5 @@ inscribe.render('/');
 ```
 Render a page from storage based on `url`.
 
+####inscribe.js is still unstable. Feel free to make pull requests.
+
