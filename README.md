@@ -30,7 +30,7 @@ This:
 ```html
 <link rel="stylesheet" type="text/css" href="/asset/css/style.css">
 <img src="/asset/img/image.jpg"></img>
-<script src="/asset/js/script.js></script>
+<script src="/asset/js/script.js"></script>
 ```
 
 Will be converted to this:
