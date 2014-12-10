@@ -87,7 +87,10 @@ function storeViews(urls) {
     // to localize 'url' in async function
     (function(url) {
       storage.get(url, function(value) {
-        if (!value) fetchView(url);
+        // TODO
+        // Change this to fetch only when key unavailable
+        // if(!value)
+        fetchView(url);
       });
     })(url);
   }
@@ -110,7 +113,6 @@ function fetchView(url) {
     });
   }
   function compressAndStoreView(html) {
-    console.log(html);
     var compressedHTML = LZString.compress(html);
     storage.set(url, compressedHTML);
   }
@@ -154,7 +156,7 @@ $(window).on('popstate', function(e) {
  * All HTML processing functions here.
  */
 
-function convertImgToBase64(url, callback, outputFormat){
+function convertImgToBase64(url, outputFormat, callback){
   var canvas = document.createElement('CANVAS');
   var ctx = canvas.getContext('2d');
   var img = new Image();
@@ -170,16 +172,37 @@ function convertImgToBase64(url, callback, outputFormat){
   img.src = url;
 }
 
+/*
+ * Transforms an element array made by jQuery parsing a HTML string
+ * back into a HTML string.
+ *
+ * Problems:
+ * Some HTML tags are stripped away. Doctype for example.
+ */
+function elemArrayToHTML(elemArray) {
+  var $container = $('<div/>');
+  $.each(elemArray, function(i, val) {
+    $container.append(val);
+  });
+  return $container.html();
+}
+
 function internalizeImages(html, callback) {
   var $html = $(html);
   var $images = $html.filter('img');
   $images.each(function(index) {
     var $image = $(this);
     var imageSource = $image.attr('src');
-    convertImgToBase64(imageSource, function(dataURL) {
-      html = html.replace(/<img src="(.*)">/gim,
-        '<img src="' + dataURL + '">');
-      if (index === $images.length-1) callback(html);
+    // add support for GIFs
+    var filetype = imageSource.split('.').pop();
+    convertImgToBase64(imageSource, filetype, function(dataURL) {
+      $image.attr('src', dataURL); // replaced with Base64
+      // when finish iterating images, do callback
+      if (index === $images.length-1) {
+        var replacedHTML = elemArrayToHTML($html);
+        console.log(replacedHTML);
+        callback(replacedHTML);
+      }
     });
   });
 }
