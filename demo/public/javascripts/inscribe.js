@@ -35,12 +35,13 @@ function fetchView(url) {
     success: processHTML
   });
   function processHTML(html) {
-    internalizeImages(html, function(html1) {
-      internalizeJS(html1, function(html2) {
+    internalizeImages(html, function(html) {
+      /*internalizeJS(html1, function(html2) {
         internalizeCSS(html2, function(html3) {
           compressAndStoreView(html3);
         });
-      });
+      });*/
+      compressAndStoreView(html);
     });
   }
   function compressAndStoreView(html) {
@@ -105,7 +106,6 @@ function convertImgToBase64(url, callback, outputFormat){
 }
 
 function internalizeImages(html, callback) {
-  console.log('passed imaeg')
   var $html = $(html);
   var $images = $html.filter('img');
   $images.each(function(index) {
@@ -125,20 +125,17 @@ function internalizeTextFiles(type, html, callback) {
       tagName: 'script',
       newTagName: 'script',
       urlName: 'src',
-      tagPattern: '<\\s*script\\s*src\\s*=\\s*"' + url + '"\\s*\\/?>'
     },
     css: {
       tagName: 'link[rel="stylesheet"]',
       newTagName: 'style',
       urlName: 'href',
-      tagPattern: '<\\s*link.*href\\s*=\\s*"' + url + '".*/?>'
     }
   }
   var typeData = typeDatas[type];
   var tagName = typeData.tagName;
   var newTagName = typeData.newTagName;
   var urlName = typeData.urlName;
-  var tagPattern = typeData.tagPattern;
 
   var $html = $(html);
   var $assets = $html.filter(tagName);
@@ -149,10 +146,14 @@ function internalizeTextFiles(type, html, callback) {
     fetchAsset(assetSource);
   });
   function fetchAsset(url) {
+    var tagPatterns = {
+      js: '<\\s*script\\s*src\\s*=\\s*"' + url + '"\\s*\\/?>.*</\\s*script\\s*>',
+      css: '<\\s*link.*href\\s*=\\s*"' + url + '".*/?>'
+    };
     $.ajax({
       url: url,
       success: function(html) {
-        tagPattern = new RegExp(tagPattern, 'gim');
+        tagPattern = new RegExp(tagPatterns[type], 'gim');
         injectAsset(html, tagPattern)
       }
     }).done(function() {
