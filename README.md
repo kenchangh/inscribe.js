@@ -7,7 +7,7 @@ inscribe.js
 inscribe.store(['/', '/user']);
 ```
 
-And then you get *100%* increase in page load times:
+And then you get *100%* decrease in page load times:
 
 Wait what?! Let me explain.
 
