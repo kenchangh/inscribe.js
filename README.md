@@ -17,7 +17,8 @@ This is NOT a single page application generator or anything like that. It's almo
 
 Take a look at the demo for a better understanding.
 
-####The nitty-gritty details
+The nitty-gritty details
+------------------------
 
 Basically, when passed an Array of urls, Inscribe will make ajax requests to them, compress the HTML fetched and store them.
 
@@ -52,7 +53,9 @@ console.log('hellooo');
 
 Tada! All links that are passed into Inscribe will render at magical speeds when clicked.
 
-####Dependencies
+Dependencies
+------------
+
 **jQuery** is a dependency of inscribe.js.
 
 jQuery is used in making Ajax requests and DOM manipulation. There will be future releases without it. But for now, just stick to jQuery. :grin:
@@ -64,7 +67,8 @@ Just do this:
 <script src="/path/to/inscribe.js"></script>
 ```
 
-####A glance at the API
+A glance at the API
+-------------------
 
 ```javascript
 inscribe.this();
