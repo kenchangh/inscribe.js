@@ -4,7 +4,7 @@ inscribe.js
 **Just do this:**
 
 ```javascript
-inscribe.store(['/', '/user']);
+inscribe.store(['/', '/users']);
 ```
 
 And then you get *100%* decrease in page load times:
@@ -51,6 +51,18 @@ console.log('hellooo');
 ```
 
 Tada! All links that are passed into Inscribe will render at magical speeds when clicked.
+
+####Dependencies
+**jQuery** is a dependency of inscribe.js.
+
+jQuery is used in making Ajax requests and DOM manipulation. There will be future releases without it. But for now, just stick to jQuery. :grin:
+
+Just do this:
+
+```html
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> <!-- include this first -->
+<script src="/path/to/inscribe.js"></script>
+```
 
 ####A glance at the API
 
