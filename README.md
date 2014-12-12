@@ -16,6 +16,7 @@ Inscribe is a script that helps you serve up your web pages from the client's st
 This is NOT a single page application generator or anything like that. It's almost the opposite. Inscribe is best used with sites that use server-side rendering.
 
 Take a look at the demo for a better understanding.
+**Update:** The demo is not ready yet. I'll get it done asap.
 
 The nitty-gritty details
 ------------------------
