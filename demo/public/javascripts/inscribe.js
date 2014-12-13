@@ -63,7 +63,7 @@ storage.get = function getStorage(key, callback) {
   setTimeout(function() {
     var value = localStorage.getItem(key);
     callback(parseIfPossible(value)); // mandate for a callback 
-  })
+  }, 0);
 };
 
 storage.works = storageSupported('localStorage');
