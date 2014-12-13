@@ -4,7 +4,7 @@ inscribe.js
 **Just do this:**
 
 ```javascript
-inscribe.store(['/', '/user']);
+inscribe.store(['/', '/users']);
 ```
 
 And then you get *100%* decrease in page load times:
@@ -17,7 +17,10 @@ This is NOT a single page application generator or anything like that. It's almo
 
 Take a look at the demo for a better understanding.
 
-####The nitty-gritty details
+**Update:** The demo is not ready yet. I'll get it done asap.
+
+The nitty-gritty details
+------------------------
 
 Basically, when passed an Array of urls, Inscribe will make ajax requests to them, compress the HTML fetched and store them.
 
@@ -52,7 +55,22 @@ console.log('hellooo');
 
 Tada! All links that are passed into Inscribe will render at magical speeds when clicked.
 
-####A glance at the API
+Dependencies
+------------
+
+**jQuery** is a dependency of inscribe.js.
+
+jQuery is used in making Ajax requests and DOM manipulation. There will be future releases without it. But for now, just stick to jQuery. :grin:
+
+Just do this:
+
+```html
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> <!-- include this first -->
+<script src="/path/to/inscribe.js"></script>
+```
+
+A glance at the API
+-------------------
 
 ```javascript
 inscribe.this();
