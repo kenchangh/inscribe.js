@@ -86,12 +86,12 @@ function storeViews(urls) {
     var url = urls[i];
     // to localize 'url' in async function
     (function(url) {
-      storage.get(url, function(value) {
+      //storage.get(url, function(value) {
         // TODO
         // Change this to fetch only when key unavailable
         // if(!value)
-        fetchView(url);
-      });
+      //});
+      fetchView(url);
     })(url);
   }
   attachClickHandlers(urls);
@@ -126,9 +126,8 @@ function fetchView(url) {
           compressAndStoreView(updatedHTML);
         });
       });
-      //var updatedHTML = elemArrayToHTML($html);
-      //console.log(updatedHTML);
-      //compressAndStoreView(updatedHTML);
+      var updatedHTML = elemArrayToHTML($html);
+      compressAndStoreView(updatedHTML);
     });
   }
   function compressAndStoreView(html) {
@@ -213,6 +212,9 @@ function internalizeImages($html, callback) {
   });
 }
 
+//(function($) {
+
+
 // one function to rule them all (css/js)
 function internalizeTextFiles(type, $html, callback) {
   var typeDatas = {
@@ -232,16 +234,19 @@ function internalizeTextFiles(type, $html, callback) {
   var fetchedCounter = 0;
   var $assets = $html.filter(typeData.tagName);
   $assets.each(function() {
+    var tag = typeData.newTagName;
     var $asset = $(this);
-    var assetSource = $asset.attr(typeData.urlAttr);
+    var assetUrl = $asset.attr(typeData.urlAttr);
     $.ajax({
-      url: assetSource,
+      url: assetUrl,
       success: function(content) {
-        var tagName = typeData.newTagName;
-        $asset.removeAttr('src').text(content);
-        //$asset.replaceWith('<'+tagName+'>'+content+'<'+tagName+'/>');
+        // only this method works in replacing HTML tags
+        // ignore other attributes
+        var assetIndex = $html.index($asset);
+        $html[assetIndex] = $('<'+tag+'>'+content+'</'+tag+'>');
       }
     }).done(function() {
+      // way to validate if all ajax requests complete
       fetchedCounter++;
       if (fetchedCounter === $assets.length) callback($html);
     });
